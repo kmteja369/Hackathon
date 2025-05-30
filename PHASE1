@@ -1,0 +1,51 @@
+
+DESIGN
+
+module phase1(input clk, input rst, input code_in, output reg status_done, output reg fail);
+    reg [3:0] code;
+    reg [2:0] count;
+    parameter CORRECT_CODE = 4'b1011;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            count <= 0; code <= 0; status_done <= 0; fail <= 0;
+        end else begin
+            if (status_done || fail) begin
+                count <= 0; code <= 0; status_done <= 0; fail <= 0;
+            end else begin
+                code <= {code[2:0], code_in};
+                count <= count + 1;
+                if (count == 3) begin
+                    if ({code[2:0], code_in} == CORRECT_CODE)
+                        status_done <= 1;
+                    else
+                        fail <= 1;
+                end
+            end
+        end
+    end
+endmodule
+
+TEST BENCH
+
+module tb_phase1;
+    reg clk = 0, rst = 1, code_in;
+    wire status_done, fail;
+    phase1 uut(.clk(clk), .rst(rst), .code_in(code_in), .status_done(status_done), .fail(fail));
+
+    always #5 clk = ~clk;
+
+    initial begin
+        $display("Starting Phase 1 Test...");
+        #10 rst = 0;
+        code_in = 1; #10;
+        code_in = 0; #10;
+        code_in = 1; #10;
+        code_in = 1; #10;
+        #10 $display("Done: %b, Fail: %b", status_done, fail);
+        $finish;
+    end
+endmodule
+
+
+
