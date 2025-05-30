@@ -1,0 +1,49 @@
+design
+
+module phase4(input clk, input rst, input [7:0] plate_in, output reg status_done, output reg fail);
+    reg [1:0] count;
+    reg [7:0] expected_seq [2:0];
+
+    initial begin
+        expected_seq[0] = 8'b10101010;
+        expected_seq[1] = 8'b11001100;
+        expected_seq[2] = 8'b11110000;
+    end
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            count <= 0; status_done <= 0; fail <= 0;
+        end else begin
+            if (plate_in == expected_seq[count]) begin
+                count <= count + 1;
+                if (count == 2)
+                    status_done <= 1;
+            end else begin
+                fail <= 1;
+                count <= 0;
+            end
+        end
+    end
+endmodule
+
+test bench
+
+module tb_phase4;
+    reg clk = 0, rst = 1;
+    reg [7:0] plate_in;
+    wire status_done, fail;
+
+    phase4 uut(.clk(clk), .rst(rst), .plate_in(plate_in), .status_done(status_done), .fail(fail));
+
+    always #5 clk = ~clk;
+
+    initial begin
+        $display("Starting Phase 4 Test...");
+        #10 rst = 0;
+        plate_in = 8'b10101010; #10;
+        plate_in = 8'b11001100; #10;
+        plate_in = 8'b11110000; #10;
+        $display("Done: %b, Fail: %b", status_done, fail);
+        $finish;
+    end
+endmodule
