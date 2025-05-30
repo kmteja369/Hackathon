@@ -1,0 +1,41 @@
+design
+
+module phase5(input clk, input rst, output reg [1:0] time_lock_out, output reg status_done, output reg fail);
+    reg [1:0] step;
+    reg [3:0] timer;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            step <= 0; time_lock_out <= 0; status_done <= 0; fail <= 0; timer <= 0;
+        end else begin
+            timer <= timer + 1;
+            case (step)
+                0: if (timer == 4) begin time_lock_out <= 2'b01; step <= 1; timer <= 0; end
+                1: if (timer == 4) begin time_lock_out <= 2'b10; step <= 2; timer <= 0; end
+                2: if (timer == 4) begin time_lock_out <= 2'b11; step <= 3; timer <= 0; end
+                3: status_done <= 1;
+                default: fail <= 1;
+            endcase
+        end
+    end
+endmodule
+
+test bench
+
+module tb_phase5;
+    reg clk = 0, rst = 1;
+    wire [1:0] time_lock_out;
+    wire status_done, fail;
+
+    phase5 uut(.clk(clk), .rst(rst), .time_lock_out(time_lock_out), .status_done(status_done), .fail(fail));
+
+    always #5 clk = ~clk;
+
+    initial begin
+        $display("Starting Phase 5 Test...");
+        #10 rst = 0;
+        #100;
+        $display("Output: %b, Done: %b, Fail: %b", time_lock_out, status_done, fail);
+        $finish;
+    end
+endmodule
