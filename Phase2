@@ -1,0 +1,39 @@
+design
+
+module phase2(input clk, input rst, input [3:0] switch_in, output reg status_done, output reg fail);
+    parameter CORRECT = 4'b1101;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            status_done <= 0;
+            fail <= 0;
+        end else begin
+            if (switch_in == CORRECT)
+                status_done <= 1;
+            else
+                fail <= 1;
+        end
+    end
+endmodule
+
+test bench
+
+module tb_phase2;
+    reg clk = 0, rst = 1;
+    reg [3:0] switch_in;
+    wire status_done, fail;
+
+    phase2 uut(.clk(clk), .rst(rst), .switch_in(switch_in), .status_done(status_done), .fail(fail));
+
+    always #5 clk = ~clk;
+
+    initial begin
+        $display("Starting Phase 2 Test...");
+        #10 rst = 0;
+        switch_in = 4'b1101; #10;
+        $display("Done: %b, Fail: %b", status_done, fail);
+        #10 switch_in = 4'b1010; #10;
+        $display("Recheck - Done: %b, Fail: %b", status_done, fail);
+        $finish;
+    end
+endmodule
